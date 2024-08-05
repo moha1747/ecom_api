@@ -43,3 +43,4 @@ func initStorage(db *sql.DB) {
 
 	log.Println("DB: Successfully connected!")
 }
+
