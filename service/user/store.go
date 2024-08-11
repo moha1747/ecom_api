@@ -16,6 +16,33 @@ func NewStore(db *sql.DB) *Store {
 
 }
 
+func (s* Store) CreateUser(user types.User) error {
+	_, err := s.db.Exec("INSERT INTO users (firstName, lastName, email, password) VALUE (?, ?, ?, ?)", user.FIrstName, user.LastName, user.Email, user.Password)
+	if err != nil {
+		return  err
+	}
+	return nil
+}
+
+
+func (s *Store) GetUserById(id int) (*types.User, error) {
+	rows, err := s.db.Query("SELECT * FROM WHERE id = ?", id)
+	if err != nil {
+		return nil, err
+	}
+	user := new(types.User)
+	for rows.Next() {
+		user, err = scanRowIntoUser(rows)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if user.ID == 0 {
+		return nil, fmt.Errorf("user not found")
+	}
+	return user, nil
+}
+
 func (s* Store) GetUserByEmail(email string) (*types.User, error) {
 	rows, err := s.db.Query("SELECT * FROM users WHERE email = ?", email)
 	if err != nil {
@@ -48,9 +75,13 @@ func scanRowIntoUser(rows *sql.Rows) (*types.User, error)  {
 		&user.CreatedAt,
 	)
 	
-	if err != nil {
+	if err != nil { 
 		return nil, err
 	}
 	return user, nil
 	
 }
+
+
+
+

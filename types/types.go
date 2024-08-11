@@ -1,10 +1,14 @@
-package types 
+package types
+
+import (
+	"time"
+)
 
 // Interface because it is simpler to test interfaces in go
 type UserStore interface {
 	GetUserByEmail(email string) (*User, error)
 	GetUserById(id int) (*User, error)
-	CreatedUser(User) error
+	CreateUser(User) error
 }
 
 
@@ -14,13 +18,12 @@ type User struct {
 	LastName string `json:"lastName"`
 	Email string `json:"email"`
 	Password string `json:"_"`
-	CreatedAt string `json:"createdAt"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
 type ResgisterPayload struct {
-	FIrstName string `json:"firstName"`
-	LastName string `json:"lastName"`
-	Email string `json:"email"`
-	Password string `json:"password"`
-
+	FIrstName string `json:"firstName" validate:"required"`
+	LastName string `json:"lastName" validate:"required"` 
+	Email string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=3,max=130"`
 }

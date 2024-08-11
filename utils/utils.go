@@ -1,10 +1,13 @@
 package utils
 
 import (
-"encoding/json"
-"fmt"
-"net/http"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	validate "github.com/go-playground/validator/v10"
 )
+
+var Validate = validate.New()
 
 func ParseJSON(request *http.Request, payload any) error { 
 	if request.Body == nil {
