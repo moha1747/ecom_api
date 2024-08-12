@@ -23,11 +23,10 @@ migration:
 	@migrate create -ext sql -dir cmd/migrate/migrations $(filter-out $@,$(MAKECMDGOALS))
 
 migrate-up:
-	@migrate go run cmd/migrate/main.go up
+	@go run cmd/migrate/main.go up
 
 migrate-down:
-	@migrate go run cmd/migrate/main.go down
-
+	@go run cmd/migrate/main.go down
 # Clean the build output
 clean:
 	@rm -f $(BINARY)
