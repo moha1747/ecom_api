@@ -18,7 +18,7 @@ func TestHandler_RegisterRoutes(t *testing.T) {
 	t.Run("Fail if user payload is invalid", func(t *testing.T) {
 		// create a request
 		payload := types.ResgisterPayload{
-			FIrstName: "John",
+			FirstName: "John",
 			LastName: "Doe",
 			Email: "123",
 			Password: "password",
@@ -44,7 +44,7 @@ func TestHandler_RegisterRoutes(t *testing.T) {
 	t.Run("Should correctly register a user", func(t *testing.T)  {
 				// create a request
 		payload := types.ResgisterPayload{
-			FIrstName: "John",
+			FirstName: "John",
 			LastName: "Doe",
 			Email: "valid@mail.com",
 			Password: "password",

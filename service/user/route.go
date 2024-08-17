@@ -1,7 +1,6 @@
 package user
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -10,6 +9,8 @@ import (
 	"github.com/moha1747/ecom_api/service/auth"
 	"github.com/moha1747/ecom_api/types"
 	"github.com/moha1747/ecom_api/utils"
+	"github.com/moha1747/ecom_api/config"
+
 )
 type Handler struct {
 	store types.UserStore
@@ -25,49 +26,81 @@ func (h *Handler) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/register", h.handleRegister).Methods("POST")
 
 }
+func (h *Handler) handleLogin(w http.ResponseWriter, r *http.Request) {
+    var user = types.LoginUserPayload{}
+    if err := utils.ParseJSON(r, &user); err != nil {
+        utils.WriteError(w, http.StatusBadRequest, err)
+        return
+    }
 
-func (h *Handler) handleLogin(response http.ResponseWriter, request *http.Request) {
+    // Validate the payload
+    if err := utils.Validate.Struct(user); err != nil {
+        errors := err.(validator.ValidationErrors)
+        utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload %v", errors))
+        return
+    }
 
+    // Check if user exists
+    u, err := h.store.GetUserByEmail(user.Email)
+    if err != nil {
+        utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("not found, invalid email or password"))
+        return
+    }
+
+    // Validate password
+    if !auth.ComparePasswords(u.Password, []byte(user.Password)) {
+        utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid email or password"))
+        return
+    }
+
+    // Generate JWT token
+    secret := []byte(config.Envs.JWTSecret)
+    token, err := auth.CreateJWT(secret, u.ID)
+    if err != nil {
+        utils.WriteError(w, http.StatusInternalServerError, err)
+        return
+    }
+
+    // Return the token
+    utils.WriteJSON(w, http.StatusOK, map[string]string{"token": token})
 }
-
-
-func (h *Handler) handleRegister(response http.ResponseWriter, request *http.Request) {
-	// get JSON payload
-	var payload types.ResgisterPayload
-
-	if err := json.NewDecoder(request.Body).Decode(&payload); err != nil {
-		utils.WriteError(response, http.StatusBadRequest, err)
+func (h *Handler) handleRegister(w http.ResponseWriter, r *http.Request) {
+	var user = types.ResgisterPayload{}
+	if err := utils.ParseJSON(r, &user); err != nil {
+		utils.WriteError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	// validate the payload
-	if err := utils.Validate.Struct(payload); err != nil {
+	if err := utils.Validate.Struct(user); err != nil {
 		errors := err.(validator.ValidationErrors)
-		utils.WriteError(response, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
-		return 
-	}
-	// check if the user exists
-	_, err := h.store.GetUserByEmail(payload.Email)
-	if err != nil {
-		utils.WriteError(response, http.StatusBadRequest, fmt.Errorf("user with email %s already exists", payload.Email))
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("invalid payload: %v", errors))
 		return
 	}
-	hashedPassword, err := auth.HashPassword(payload.Password)
-	if err != nil {
-		utils.WriteError(response, http.StatusInternalServerError, err)
+
+	// check if user exists
+	_, err := h.store.GetUserByEmail(user.Email)
+	if err == nil {
+		utils.WriteError(w, http.StatusBadRequest, fmt.Errorf("user with email %s already exists", user.Email))
 		return
 	}
-	
-		// if not, create the new user
-		err = h.store.CreateUser(types.User{
-			FIrstName: payload.FIrstName,
-			LastName: payload.LastName,
-			Email: payload.Email,
-			Password: hashedPassword,
-		})
-		if err != nil {
-			utils.WriteError(response, http.StatusInternalServerError, err)
-			return
-		}
-		utils.WriteJSON(response, http.StatusCreated, nil)
+
+	// hash password
+	hashedPassword, err := auth.HashPassword(user.Password)
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	err = h.store.CreateUser(types.User{
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+		Password:  hashedPassword,
+	})
+	if err != nil {
+		utils.WriteError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusCreated, nil)
 }
