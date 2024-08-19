@@ -28,3 +28,18 @@ func WriteJSON(response http.ResponseWriter, status int, payload any) error {
 func WriteError(response http.ResponseWriter, status int, err error) {
 	WriteJSON(response, status, map[string]string{"error": err.Error()})
 }
+
+func GetTokenFromRequest(r *http.Request) string {
+	tokenAuth := r.Header.Get("Authorization")
+	tokenQuery := r.URL.Query().Get("token")
+	
+	if tokenAuth != "" {
+		return tokenAuth
+	}
+
+	if tokenQuery != "" {
+		return tokenQuery
+	}
+
+	return ""
+}

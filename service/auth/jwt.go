@@ -3,12 +3,12 @@ package auth
 import (
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/moha1747/ecom_api/config"
-	// "github.com/moha1747/ecom_api/types"
+	"github.com/moha1747/ecom_api/types"
 	"github.com/moha1747/ecom_api/utils"
 
 	"context"
 	"fmt"
-	// "log"
+	"log"
 	"net/http"
 	"strconv"
 	"time"
@@ -17,49 +17,49 @@ import (
 type contextKey string
 const userKey contextKey = "userID"
 
-// func withJWTAuth(handlerFunc http.HandlerFunc, store types.UserStore) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		tokenString := utils.GetTokenFromRequest(r)
+func WithJWTAuth(handlerFunc http.HandlerFunc, store types.UserStore) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		tokenString := utils.GetTokenFromRequest(r)
 
-// 		token, err := validateJWT(tokenString)
-// 		if err != nil {
-// 			log.Printf("failed to validate token: %v", err)
-// 			permissionDenied(w)
-// 			return
-// 		}
+		token, err := validateJWT(tokenString)
+		if err != nil {
+			log.Printf("failed to validate token: %v", err)
+			permissionDenied(w)
+			return
+		}
 
-// 		if !token.Valid {
-// 			log.Println("invalid token")
-// 			permissionDenied(w)
-// 			return
-// 		}
+		if !token.Valid {
+			log.Println("invalid token")
+			permissionDenied(w)
+			return
+		}
 
-// 		claims := token.Claims.(jwt.MapClaims)
-// 		str := claims["userID"].(string)
+		claims := token.Claims.(jwt.MapClaims)
+		str := claims["userID"].(string)
 
-// 		userID, err := strconv.Atoi(str)
-// 		if err != nil {
-// 			log.Println("failed to convert userID to int: %v", err)
-// 			permissionDenied(w)
-// 			return
-// 		}
+		userID, err := strconv.Atoi(str)
+		if err != nil {
+			log.Println("failed to convert userID to int: %v", err)
+			permissionDenied(w)
+			return
+		}
 
-// 		u, err := store.GetUserById(userID)
-// 		if err != nil {
-// 			log.Printf("failed to get user by id: %v", err)
-// 			permissionDenied(w)
-// 			return
-// 		}
+		u, err := store.GetUserById(userID)
+		if err != nil {
+			log.Printf("failed to get user by id: %v", err)
+			permissionDenied(w)
+			return
+		}
 
-// 		// Add the user to the context
-// 		ctx := r.Context()
-// 		ctx = context.WithValue(ctx, userKey, u.ID)
-// 		r = r.WithContext(ctx)
+		// Add the user to the context
+		ctx := r.Context()
+		ctx = context.WithValue(ctx, userKey, u.ID)
+		r = r.WithContext(ctx)
 
-// 		// Call the function if the token is valid
-// 		handlerFunc(w, r)
-// 	}
-// }
+		// Call the function if the token is valid
+		handlerFunc(w, r)
+	}
+}
 
 func CreateJWT(secret []byte, userID int) (string, error) {
 	expiration := time.Second * time.Duration(config.Envs.JWTExpirationInSeconds)
