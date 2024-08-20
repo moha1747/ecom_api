@@ -9,7 +9,7 @@ import (
 	"github.com/moha1747/ecom_api/types"
 	"github.com/moha1747/ecom_api/utils"
 	"github.com/go-playground/validator/v10"
-	"github.com/moha1747/ecom_api/service/auth" // Add this line to import the package
+	"github.com/moha1747/ecom_api/service/auth"
 )
 
 type Handler struct {
